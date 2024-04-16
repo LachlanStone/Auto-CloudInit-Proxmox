@@ -13,12 +13,12 @@ Description="Notes: This is a Cloud-Init Image image of Debian $DebianVersion LT
 - Operating System: Debian $DebianVersion
 -- Release: $DebinaBuildName
 - Purpose: Debian Desktop Enviroment / Server Enviroment Cloud Init Image"
-Timezone=Australia/Sydney
+Timezone=UTC
 
 ## Note: The Speech Marks are required even if empty [that will cause no description]
 
 ## Cloud Init Variables
-CloudInit_Setup=Network-Only 
+CloudInit_Setup=None
 
 ### Options
 ### None - Just Added Cloud Init Drive
