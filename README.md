@@ -5,6 +5,8 @@ Auto-CloudInit-Proxmox is a cloud instance template framework for Proxmox VE Tem
 
 - CloudInit-Debian.sh
   - Auto Deployment of the Latest Debian LTS Release
+- CloudInit-AlmaLinux.sh
+  - Auto Deployment of the Latest Alma-Linux LTS Release
 
 ## How to use the script
 
@@ -14,6 +16,7 @@ Each Script has a list of variables within the script to allow you to customize 
 
 These scripts do require the following packages to be installed on your Proxmox-VE or Linux Host
 
+- libguestfs-tools
 
 ## Find a Bug or Feature Request
 

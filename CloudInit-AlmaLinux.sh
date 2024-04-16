@@ -1,23 +1,22 @@
 # Variables
 ## Download Variables
-DebianVersion=12
-DebinaBuildName=bookworm
-CloudInit_Image=debian-$DebianVersion-generic-amd64.qcow2
-CloudInit_Download=https://cloud.debian.org/images/cloud/$DebinaBuildName/latest/debian-$DebianVersion-generic-amd64.qcow2
+AlmaLinuxVersion=9
+CloudInit_Image=AlmaLinux-$AlmaLinuxVersion-GenericCloud-latest.x86_64.qcow2
+CloudInit_Download=https://repo.almalinux.org/almalinux/$AlmaLinuxVersion/cloud/x86_64/images/AlmaLinux-$AlmaLinuxVersion-GenericCloud-latest.x86_64.qcow2
 
 ## VM Creation Variables
-VM_NAME=CloudInit-Debian$DebianVersion
+VM_NAME=CloudInit-AlmaLinux$AlmaLinuxVersion
 VMID=99998
-Description="Notes: This is a Cloud-Init Image image of Debian $DebianVersion LTS
-- Name: $VM_NAME
-- Operating System: Debian $DebianVersion
--- Release: $DebinaBuildName
-- Purpose: Debian Desktop Enviroment / Server Enviroment Cloud Init Image"
+Description="Notes: This is a Cloud-Init Image image of Ubuntu $AlmaLinuxVersion LTS
+- Name: CloudInit-UbuntuSRV_LTS_$AlmaLinuxVersion
+- Operating System: Ubuntu Server LTS
+- Role / Purpose: This is a Deployment Template for Ubuntu
+- SNMP Setup: No
+- Critical: No"
+### Note: The Speech Marks are required even if empty [that will cause no description]
 Timezone=UTC
 
-## Note: The Speech Marks are required even if empty [that will cause no description]
-
-## Cloud Init Variables
+## Cloud Init Settings
 CloudInit_Setup=None
 
 ### Options
@@ -28,15 +27,14 @@ CloudInit_Setup=None
 ### Password - Username and Password Only
 ### Both - Username and CiPassword and SSHKey
 
-## User Setup Variables
+## User Setup
 CI_UserName=
 CI_Password=
 CI_SSHKey_Path=
  
-## Network Setup Variables
-NameServer=   # Example 8.8.8.8 1.1.1.1
+## Network Setup
+NameServer=     # Example 8.8.8.8 1.1.1.1
 SearchDomain=
-
 
 # Colour Variables for Script
 RED=`tput bold && tput setaf 1`
@@ -59,25 +57,32 @@ function BLUE(){
 }
 
 # Directory Setup:
-rm -rf $VM_NAME
-mkdir -p $VM_NAME
-cd $VM_NAME
+rm -rf AlmaLinux$AlmaLinuxVersion-CloudInitFiles
+mkdir -p AlmaLinux$AlmaLinuxVersion-CloudInitFiles
+cd AlmaLinux$AlmaLinuxVersion-CloudInitFiles
 
 # Remove the Old Image
 RED "Removing old Tempalte"
 qm destroy $VMID --purge
 
 # Cloud-Init File Setup
+## Setting up the CheckSUM
+curl -O -s https://repo.almalinux.org/almalinux/RPM-GPG-KEY-AlmaLinux-$AlmaLinuxVersion
+gpg --with-subkey-fingerprints RPM-GPG-KEY-AlmaLinux-$AlmaLinuxVersion
+gpg --import RPM-GPG-KEY-AlmaLinux-$AlmaLinuxVersion
+curl -O -s https://repo.almalinux.org/almalinux/$AlmaLinuxVersion/cloud/x86_64/images/CHECKSUM
+curl -O -s https://repo.almalinux.org/almalinux/$AlmaLinuxVersion/cloud/x86_64/images/CHECKSUM.asc
+gpg --verify CHECKSUM.asc CHECKSUM
+
 ## Cloud Init Downloading
 GREEN "Downloading CloudInit Image"
-wget $CloudInit_Download
 
-
-
+curl -O -s $CloudInit_Download
+sha256sum -c CHECKSUM 2>&1 | grep OK | echo
 
 # Modifiy the image via virt-customize
 # GREEN "Modifiy the image via virt-customize"
-virt-customize -a $CloudInit_Image --install qemu-guest-agent,bash-completion --truncate /etc/machine-id
+virt-customize -a $CloudInit_Image --install qemu-guest-agent --truncate /etc/machine-id
 virt-customize -a $CloudInit_Image --timezone $Timezone --truncate /etc/machine-id
 
 # Creating the VM
