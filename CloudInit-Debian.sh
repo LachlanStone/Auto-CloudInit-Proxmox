@@ -72,12 +72,9 @@ qm destroy $VMID --purge
 GREEN "Downloading CloudInit Image"
 wget $CloudInit_Download
 
-
-
-
 # Modifiy the image via virt-customize
 # GREEN "Modifiy the image via virt-customize"
-virt-customize -a $CloudInit_Image --install qemu-guest-agent,bash-completion --truncate /etc/machine-id
+virt-customize -a $CloudInit_Image --install qemu-guest-agent,bash-completion,locales-all --truncate /etc/machine-id
 virt-customize -a $CloudInit_Image --timezone $Timezone --truncate /etc/machine-id
 
 # Creating the VM
@@ -87,6 +84,33 @@ GREEN "Starting creation of VMs"
 GREEN "Setting up VM Settings"
 qm create $VMID --memory 2048 --cpu=host,flags=+pcid --core 2 --name $VM_NAME 
 qm set $VMID --onboot 1 --ostype l26 --scsihw virtio-scsi-pci --bios ovmf --machine q35 --agent=1 --net0 virtio,bridge=vmbr0 --serial0 socket 
+
+GREEN "Importing Disks"
+if [ "$1" = "--lvm" -o "$1" = "-l" ]; then
+	YELLOW "Import to local-lvm"
+	qm importdisk $VMID $CloudInit_Image local-lvm
+	qm set $VMID --scsi0 local-lvm:vm-$VMID-disk-0
+	qm set $VMID --efidisk0 local-lvm:0 --boot order=scsi0
+	qm set $VMID --ide2 local-lvm:cloudinit
+elif [ "$1" = "--zfs" -o "$1" = "-z" ]; then
+	YELLOW "Import to local-zfs"
+	qm importdisk $VMID $CloudInit_Image local-zfs
+	qm set $VMID --scsi0 local-zfs:vm-$VMID-disk-0
+	qm set $VMID --efidisk0 local-zfs:0 --boot order=scsi0
+	qm set $VMID --ide2 local-zfs:cloudinit
+elif [ "$1" = "--storage-import" -o "$1" = "-s" ]; then
+	YELLOW "Import to $2"
+	qm importdisk $VMID $CloudInit_Image $2
+	qm set $VMID --scsi0 $2:vm-$VMID-disk-0
+	qm set $VMID --efidisk0 $2:0 --boot order=scsi0
+	qm set $VMID --ide2 $2:cloudinit
+else
+	GREEN "Importing to local-lvm"
+	qm importdisk $VMID $CloudInit_Image local-lvm
+	qm set $VMID --scsi0 local-lvm:vm-$VMID-disk-0
+	qm set $VMID --efidisk0 local-lvm:0 --boot order=scsi0
+	qm set $VMID --ide2 local-lvm:cloudinit
+fi
 
 GREEN "Importing Disks"
 qm importdisk $VMID $CloudInit_Image local-lvm
