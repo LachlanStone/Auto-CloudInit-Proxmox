@@ -112,13 +112,7 @@ else
 	qm set $VMID --ide2 local-lvm:cloudinit
 fi
 
-GREEN "Importing Disks"
-qm importdisk $VMID $CloudInit_Image local-lvm
-qm set $VMID --scsi0 local-lvm:vm-$VMID-disk-0
-qm set $VMID --efidisk0 local-lvm:0 --boot order=scsi0
-qm set $VMID --ide2 local-lvm:cloudinit
-
-## Description
+### Description
 GREEN "Setting Description"
 qm set $VMID --description "$Description"
 
